@@ -8,13 +8,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=coremark
-PKG_SOURCE_DATE:=2022-01-03
-PKG_SOURCE_VERSION:=b24e397f7103061b3673261d292a0667bd3bc1b8
+PKG_SOURCE_DATE:=2022-07-27
+PKG_SOURCE_VERSION:=eefc986ebd3452d6adde22eafaff3e5c859f29e4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/eembc/coremark/tar.gz/$(PKG_SOURCE_VERSION)?
-PKG_HASH:=1b8c36b202f39b4f8a872ed7d5db1dc4473ee27f7bc2885a9da20e72925c58c3
+PKG_HASH:=a5964bf215786d65d08941b6f9a9a4f4e50524f5391fa3826db2994c47d5e7f3
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_VERSION)
 
 PKG_MAINTAINER:=Lim Guo Wei <limguowei@gmail.com> \
@@ -55,7 +55,8 @@ define Package/coremark/config
 	config COREMARK_NUMBER_OF_THREADS
 		int "Number of threads"
 		depends on COREMARK_ENABLE_MULTITHREADING
-		default 32
+		default 128 if i386||x86_64
+		default 8
 		help
 			Number of threads to run in parallel
 endef

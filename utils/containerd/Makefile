@@ -1,15 +1,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=containerd
-PKG_VERSION:=1.6.4
+PKG_VERSION:=1.6.8
 PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/containerd/containerd/tar.gz/v${PKG_VERSION}?
-PKG_HASH:=f422e21e35705d1e741c1f3280813e43f811eaff4dcc5cdafac8b8952b15f468
-PKG_SOURCE_VERSION:=212e8b6fa2f44b9c21b2798135fc6fb7c53efc16
+PKG_HASH:=f5f938513c28377f64f85e84f2750d39f26b01262f3a062b7e8ce35b560ca407
+PKG_SOURCE_VERSION:=9cd3357b7fd7218e4aec3eae239db1f68a5a6ec6
 
 PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
 
@@ -42,7 +42,8 @@ MAKE_PATH:=$(GO_PKG_WORK_DIR_NAME)/build/src/$(GO_PKG)
 MAKE_VARS += $(GO_PKG_VARS)
 MAKE_FLAGS += \
 	VERSION=$(PKG_VERSION) \
-	REVISION=$(PKG_SOURCE_VERSION)
+	REVISION=$(PKG_SOURCE_VERSION) \
+	PREFIX=""
 
 ifeq ($(CONFIG_SELINUX),y)
 MAKE_FLAGS += BUILDTAGS='selinux'
@@ -55,7 +56,7 @@ Build/Compile=$(call Build/Compile/Default)
 
 define Package/containerd/install
 	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/local/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/{ctr,containerd,containerd-stress,containerd-shim,containerd-shim-runc-v1,containerd-shim-runc-v2} $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,containerd))
