@@ -13,21 +13,21 @@ PKG_HASH:=d72fc2c244603b4668da94081dc4d6067d467fdfa026e06a274012f16600480c
 PATCH_DIR:=./patches/v10.x
 else
 ifeq ($(CONFIG_NODEJS_18),y)
-PKG_VERSION:=v18.7.0
+PKG_VERSION:=v18.12.1
 PKG_RELEASE:=1
-PKG_HASH:=8834a33c92dfe6ba8903e6715caeaa25dff4657e703c54cd06ec113493e2c3c2
+PKG_HASH:=4fa406451bc52659a290e52cfdb2162a760bd549da4b8bbebe6a29f296d938df
 PATCH_DIR:=./patches/v18.x
 else
 ifeq ($(CONFIG_NODEJS_16),y)
-PKG_VERSION:=v16.16.0
+PKG_VERSION:=v16.18.1
 PKG_RELEASE:=1
-PKG_HASH:=145151eff3b2aa5ebe73384009c52271a83740ae687a93c98c628cd7d52736eb
+PKG_HASH:=1f8051a88f86f42064f4415fe7a980e59b0a502ecc8def583f6303bc4d445238
 PATCH_DIR:=./patches/v16.x
 else
 ifeq ($(CONFIG_NODEJS_14),y)
-PKG_VERSION:=v14.20.0
+PKG_VERSION:=v14.21.1
 PKG_RELEASE:=1
-PKG_HASH:=2b5098498889d1e6a9709d63f3d6f94e696a5ad8221618c5d51159cee363996a
+PKG_HASH:=3db95d6ca728957bf090b6301a7a9d2d80714b2a06d898a1db65c6e42b1da7ac
 PATCH_DIR:=./patches/v14.x
 else
 PKG_VERSION:=v12.22.1
@@ -97,7 +97,6 @@ endef
 
 define Package/node/config
 	menu "Configuration"
-		depends on PACKAGE_node
 
 	choice
 		prompt "Version Selection"
@@ -105,6 +104,7 @@ define Package/node/config
 		default NODEJS_16
 		help
 		 Select node.js version.
+		 The host package version is also the same.
 
 		config NODEJS_10
 			bool "10.x End-of-life : NO LONGER SUPPORTED"
@@ -114,34 +114,36 @@ define Package/node/config
 
 		config NODEJS_14
 			depends on !(mips||mipsel||mips64||mips64el)
-			bool "14.x Maintenance LTS"
+			bool "14.x Maintenance"
 
 		config NODEJS_16
 			depends on !(mips||mipsel||mips64||mips64el)
-			bool "16.x Active LTS"
+			bool "16.x Maintenance"
 
 		config NODEJS_18
 			depends on !(mips||mipsel||mips64||mips64el)
-			bool "18.x Current"
+			bool "18.x Active LTS"
 	endchoice
 
-	choice
-		prompt "i18n features"
-		default NODEJS_ICU_NONE
-		help
-		 Select i18n features
+	if PACKAGE_node
+		choice
+			prompt "i18n features"
+			default NODEJS_ICU_SMALL
+			help
+			 Select i18n features
 
-		config NODEJS_ICU_NONE
-			bool "Disable"
+			config NODEJS_ICU_NONE
+				bool "Disable"
 
-		config NODEJS_ICU_SMALL
-			depends on !BIG_ENDIAN
-			bool "small-icu"
+			config NODEJS_ICU_SMALL
+				depends on !BIG_ENDIAN
+				bool "small-icu"
 
-		config NODEJS_ICU_SYSTEM
-			depends on ARCH_64BIT&&!BIG_ENDIAN
-			bool "system-icu"
-	endchoice
+			config NODEJS_ICU_SYSTEM
+				depends on ARCH_64BIT&&!BIG_ENDIAN
+				bool "system-icu"
+		endchoice
+	endif
 
 	endmenu
 endef

@@ -156,8 +156,8 @@ modemmanager_connected_method_ppp_ipv4() {
 		novj \
 		noauth \
 		$authopts \
-		${username:+ user $username} \
-		${password:+ password $password} \
+		${username:+ user "$username"} \
+		${password:+ password "$password"} \
 		lcp-echo-failure 5 \
 		lcp-echo-interval 15 \
 		lock \
@@ -515,7 +515,8 @@ proto_modemmanager_teardown() {
 	modemstatus=$(mmcli --modem="${device}" --output-keyvalue)
 	bearerpath=$(modemmanager_get_field "${modemstatus}" "modem.generic.bearers.value\[1\]")
 	[ -n "${bearerpath}" ] || {
-		echo "couldn't load bearer path"
+		echo "couldn't load bearer path: disconnecting anyway"
+		mmcli --modem="${device}" --simple-disconnect >/dev/null 2>&1
 		return
 	}
 
