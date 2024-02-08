@@ -6,35 +6,28 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
 
-ifeq ($(CONFIG_NODEJS_10),y)
-PKG_VERSION:=v10.24.1
-PKG_RELEASE:=3
-PKG_HASH:=d72fc2c244603b4668da94081dc4d6067d467fdfa026e06a274012f16600480c
-PATCH_DIR:=./patches/v10.x
-else
 ifeq ($(CONFIG_NODEJS_18),y)
-PKG_VERSION:=v18.12.1
+PKG_VERSION:=v18.15.0
 PKG_RELEASE:=1
-PKG_HASH:=4fa406451bc52659a290e52cfdb2162a760bd549da4b8bbebe6a29f296d938df
+PKG_HASH:=8e44d65018ff973284195c23186469a0ea4082e97ec4200e5f5706d5584daa37
 PATCH_DIR:=./patches/v18.x
 else
 ifeq ($(CONFIG_NODEJS_16),y)
-PKG_VERSION:=v16.19.0
+PKG_VERSION:=v16.19.1
 PKG_RELEASE:=1
-PKG_HASH:=4f1fec1aea2392f6eb6d1d040b01e7ee3e51e762a9791dfea590920bc1156706
+PKG_HASH:=17fb716406198125b30c94dd3d1756207b297705626afe16d8dc479a65a1d8b5
 PATCH_DIR:=./patches/v16.x
 else
 ifeq ($(CONFIG_NODEJS_14),y)
-PKG_VERSION:=v14.21.2
+PKG_VERSION:=v14.21.3
 PKG_RELEASE:=1
-PKG_HASH:=d8f09a0f16773a77613c3817606f6d455624992d9c43443aca15e91807a1ff03
+PKG_HASH:=458ec092e60ad700ddcf079cb63d435c15da4c7bb3d3f99b9a8e58a99e54075e
 PATCH_DIR:=./patches/v14.x
 else
-PKG_VERSION:=v12.22.1
-PKG_RELEASE:=4
-PKG_HASH:=dd650df7773a6ed3e390320ba51ef33cba6499f0e9397709ea3d1debdcbcb989
+PKG_VERSION:=v12.22.12
+PKG_RELEASE:=2
+PKG_HASH:=bc42b7f8495b9bfc7f7850dd180bb02a5bdf139cc232b8c6f02a6967e20714f2
 PATCH_DIR:=./patches/v12.x
-endif
 endif
 endif
 endif
@@ -66,7 +59,7 @@ define Package/node
   TITLE:=Node.js is a platform built on Chrome's JavaScript runtime
   URL:=https://nodejs.org/
   DEPENDS:=@(HAS_FPU||KERNEL_MIPS_FPU_EMULATOR||SOFT_FLOAT) @!arc @!armeb @!powerpc \
-	   +libstdcpp +libopenssl +zlib +libnghttp2 \
+	   +libstdcpp +NODEJS_18:libopenssl +zlib +libnghttp2 +libuv \
 	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
 endef
 
@@ -105,9 +98,6 @@ define Package/node/config
 		help
 		 Select node.js version.
 		 The host package version is also the same.
-
-		config NODEJS_10
-			bool "10.x End-of-life : NO LONGER SUPPORTED"
 
 		config NODEJS_12
 			bool "12.x Maintenance LTS"
@@ -177,7 +167,7 @@ CONFIGURE_ARGS:= \
 	--dest-os=linux \
 	--cross-compiling \
 	--shared-zlib \
-	--shared-openssl \
+	$(if $(CONFIG_NODEJS_18),--shared-openssl) \
 	--shared-nghttp2 \
 	--shared-cares \
 	--with-intl=$(if $(CONFIG_NODEJS_ICU_SMALL),small-icu,$(if $(CONFIG_NODEJS_ICU_SYSTEM),system-icu,none)) \

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2016 OpenWrt.org
+# Copyright (C) 2006-2023 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,14 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=msd_lite
-PKG_VERSION:=1.10
+PKG_VERSION:=1.11
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2022-04-17
+PKG_SOURCE_DATE:=2023-01-21
 PKG_SOURCE_URL:=https://github.com/rozhuk-im/msd_lite.git
-PKG_SOURCE_VERSION:=e254782c0f2199f5351cc7dae1d0be3ebaa5a7f0
-PKG_MIRROR_HASH:=dc6d9d4e3cc498238460a0599008713d97882020fe514f46156c0fec8d87fdc6
+PKG_SOURCE_VERSION:=afbe2d12e927973957d6d8dda50220014086934e
+PKG_MIRROR_HASH:=871192dc0e5b4105651a5f4bfb89179a9f11ced1c78d690b6a76e6b2af3b16b8
 
 PKG_LICENSE:=BSD-2-Clause
 PKG_LICENSE_FILES:=LICENSE
