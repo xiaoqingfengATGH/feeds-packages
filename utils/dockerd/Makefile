@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dockerd
-PKG_VERSION:=24.0.7
+PKG_VERSION:=26.1.1
 PKG_RELEASE:=$(AUTORELEASE)
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
@@ -10,8 +10,8 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_GIT_URL:=github.com/moby/moby
 PKG_GIT_REF:=v$(PKG_VERSION)
 PKG_SOURCE_URL:=https://codeload.$(PKG_GIT_URL)/tar.gz/$(PKG_GIT_REF)?
-PKG_HASH:=16a2cb4cf4d314a070085e0df06e3a6bd9ec678d28715b64060af694fc9051d5
-PKG_GIT_SHORT_COMMIT:=311b9ff # SHA1 used within the docker executables
+PKG_HASH:=d0b3b2083d1ef5144092c89bcf28519fa3cdab3ab6bfb3a6499ec5cf05961c2c
+PKG_GIT_SHORT_COMMIT:=ac2de55 # SHA1 used within the docker executables
 
 PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
 
@@ -59,7 +59,7 @@ define Package/dockerd/description
 The Docker CE Engine.
 endef
 
-GO_PKG_BUILD_VARS += GO111MODULE=auto
+
 TAR_OPTIONS:=--strip-components 1 $(TAR_OPTIONS)
 TAR_CMD=$(HOST_TAR) -C $(1) $(TAR_OPTIONS)
 TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lc -lgcc_eh)

@@ -8,14 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libxslt
-PKG_VERSION:=1.1.34
-PKG_RELEASE:=4
+PKG_VERSION:=1.1.39
+PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:= \
-	http://xmlsoft.org/sources/ \
-	ftp://fr.rpmfind.net/pub/libxml/
-PKG_HASH:=98b1bd46d6792925ad2dfe9a87452ea2adebf69dcb9919ffd55bf926a7f93f7f
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=@GNOME/libxslt/$(basename $(PKG_VERSION))
+PKG_HASH:=2a20ad621148339b0759c4d4e96719362dee64c9a096dbba625ba053846349f0
 
 PKG_MAINTAINER:=Jiri Slachta <jiri@slachta.eu>
 PKG_LICENSE:=MIT

@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rust
-PKG_VERSION:=1.75.0
-PKG_RELEASE:=1
+PKG_VERSION:=1.78.0
+PKG_RELEASE:=2
 
-PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.gz
+PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.xz
 PKG_SOURCE_URL:=https://static.rust-lang.org/dist/
-PKG_HASH:=5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088
+PKG_HASH:=8065824f0255faa3901db8206e6f9423f6f8c07cec28bc6f2797c6c948310ece
 HOST_BUILD_DIR:=$(BUILD_DIR)/host/rustc-$(PKG_VERSION)-src
 
 PKG_MAINTAINER:=Luca Barbato <lu_zero@luminem.org>
@@ -19,6 +19,7 @@ PKG_LICENSE_FILES:=LICENSE-APACHE LICENSE-MIT
 
 PKG_HOST_ONLY:=1
 PKG_BUILD_FLAGS:=no-mips16
+PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
@@ -71,10 +72,10 @@ HOST_CONFIGURE_ARGS = \
 	--datadir=$(STAGING_DIR)/host/share \
 	--mandir=$(STAGING_DIR)/host/man \
 	--dist-compression-formats=gz \
-	--enable-missing-tools \
 	--disable-sanitizers \
 	--release-channel=stable \
 	--enable-cargo-native-static \
+	--bootstrap-cache-path=$(DL_DIR)/rustc \
 	--set=llvm.download-ci-llvm=true \
 	$(TARGET_CONFIGURE_ARGS)
 
@@ -88,7 +89,6 @@ define Host/Compile
 	$(RUST_SCCACHE_VARS) \
 	CARGO_HOME=$(CARGO_HOME) \
 	TARGET_CFLAGS="$(TARGET_CFLAGS)" \
-	OPENWRT_RUSTC_BOOTSTRAP_CACHE=$(DL_DIR)/rustc \
 	$(PYTHON) $(HOST_BUILD_DIR)/x.py \
 		--build-dir $(HOST_BUILD_DIR)/build \
 		--config $(HOST_BUILD_DIR)/config.toml \

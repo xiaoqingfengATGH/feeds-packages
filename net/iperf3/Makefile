@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=iperf
-PKG_VERSION:=3.12
+PKG_VERSION:=3.17.1
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.es.net/pub/iperf
-PKG_HASH:=72034ecfb6a7d6d67e384e19fb6efff3236ca4f7ed4c518d7db649c447e1ffd6
+PKG_HASH:=84404ca8431b595e86c473d8f23d8bb102810001f15feaf610effd3b318788aa
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=BSD-3-Clause
@@ -44,7 +44,8 @@ define Package/iperf3-ssl
 $(call Package/iperf3/default)
   TITLE+= with iperf_auth support
   VARIANT:=ssl
-  DEPENDS:=+libopenssl
+  DEPENDS:=+libopenssl +libatomic
+  CONFLICTS:=iperf3
 endef
 
 define Package/libiperf3
@@ -52,9 +53,11 @@ define Package/libiperf3
   CATEGORY:=Libraries
   TITLE:=Internet Protocol bandwidth measuring library
   URL:=https://github.com/esnet/iperf
+  DEPENDS+=+libatomic
 endef
 
 TARGET_CFLAGS += -D_GNU_SOURCE
+TARGET_LDFLAGS += -latomic
 
 ifeq ($(BUILD_VARIANT), ssl)
 	CONFIGURE_ARGS += --with-openssl="$(STAGING_DIR)/usr" --disable-shared
