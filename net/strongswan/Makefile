@@ -130,7 +130,8 @@ $(call Package/strongswan/Default)
   MENU:=1
   DEPENDS:= +libpthread +ip \
 	+kmod-crypto-authenc \
-	+kmod-ipsec +kmod-ipsec4 +IPV6:kmod-ipsec6
+	+kmod-ipsec +kmod-ipsec4 +IPV6:kmod-ipsec6 \
+	+kmod-ipt-ipsec +iptables-mod-ipsec
 endef
 
 define Package/strongswan/config
