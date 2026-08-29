@@ -6,10 +6,16 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=node
 
-ifeq ($(CONFIG_NODEJS_20),y)
-PKG_VERSION:=v20.12.2
+ifeq ($(CONFIG_NODEJS_22),y)
+PKG_VERSION:=v22.23.0
 PKG_RELEASE:=1
-PKG_HASH:=d7cbcc5fbfb31e9001f3f0150bbeda59abe5dd7137aaa6273958cd59ce35ced7
+PKG_HASH:=3acfae100c7b855a4c76520ee0f95cadcace3f4254f16b7d4887f178fc95d4a0
+PATCH_DIR:=./patches/v22.x
+else
+ifeq ($(CONFIG_NODEJS_20),y)
+PKG_VERSION:=v20.18.2
+PKG_RELEASE:=1
+PKG_HASH:=69bf81b70f3a95ae0763459f02860c282d7e3a47567c8afaf126cc778176a882
 PATCH_DIR:=./patches/v20.x
 else
 ifeq ($(CONFIG_NODEJS_18),y)
@@ -34,6 +40,7 @@ PKG_VERSION:=v12.22.12
 PKG_RELEASE:=2
 PKG_HASH:=bc42b7f8495b9bfc7f7850dd180bb02a5bdf139cc232b8c6f02a6967e20714f2
 PATCH_DIR:=./patches/v12.x
+endif
 endif
 endif
 endif
@@ -66,7 +73,7 @@ define Package/node
   TITLE:=Node.js is a platform built on Chrome's JavaScript runtime
   URL:=https://nodejs.org/
   DEPENDS:=@(HAS_FPU||KERNEL_MIPS_FPU_EMULATOR||SOFT_FLOAT) @!arc @!armeb @!powerpc \
-	   +libstdcpp +(NODEJS_18||NODEJS_20):libopenssl +zlib +libnghttp2 +libuv \
+	   +libstdcpp +libopenssl +zlib +libnghttp2 +libuv \
 	   +libcares +libatomic +NODEJS_ICU_SYSTEM:icu +NODEJS_ICU_SYSTEM:icu-full-data
 endef
 
@@ -101,29 +108,34 @@ define Package/node/config
 	choice
 		prompt "Version Selection"
 		default NODEJS_12 if mips||mipsel||mips64||mips64el
-		default NODEJS_18
+		default NODEJS_22
 		help
 		 Select node.js version.
 		 The host package version is also the same.
 
 		config NODEJS_12
+			depends on mips||mipsel||mips64||mips64el
 			bool "12.x End-of-life : Only for MIPS"
 
 		config NODEJS_14
-			depends on !(mips||mipsel||mips64||mips64el)
+			depends on !(mips||mipsel||mips64||mips64el||loongarch64)
 			bool "14.x End-of-Life"
 
 		config NODEJS_16
-			depends on !(mips||mipsel||mips64||mips64el)
+			depends on !(mips||mipsel||mips64||mips64el||loongarch64)
 			bool "16.x End-of-Life"
 
 		config NODEJS_18
-			depends on !(mips||mipsel||mips64||mips64el)
+			depends on !(mips||mipsel||mips64||mips64el||loongarch64)
 			bool "18.x Maintenance LTS"
 			
 		config NODEJS_20
-			depends on !(mips||mipsel||mips64||mips64el)
+			depends on !(mips||mipsel||mips64||mips64el||loongarch64)
 			bool "20.x Active LTS"
+			
+		config NODEJS_22
+			depends on !(mips||mipsel||mips64||mips64el)
+			bool "22.x Active LTS"
 	endchoice
 
 	if PACKAGE_node
@@ -149,21 +161,28 @@ define Package/node/config
 	endmenu
 endef
 
-NODEJS_CPU:=$(subst powerpc,ppc,$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH)))))
+NODEJS_CPU:=$(subst powerpc,ppc,$(subst loongarch64,loong64,$(subst aarch64,arm64,$(subst x86_64,x64,$(subst i386,ia32,$(ARCH))))))
 
 ifeq ($(CONFIG_NODEJS_10),y)
 TARGET_LDFLAGS+=-latomic
 endif
 
-ifneq ($(CONFIG_ARCH_64BIT),y)
-FORCE_32BIT:=-m32
+ifeq ($(CONFIG_NODEJS_12),y)
+NODEJS_NO_LOAD:=cctest.target.mk embedtest.target.mk node_mksnapshot.target.mk overlapped-checker.target.mk \
+	mkcodecache.target.mk tools/v8_gypfiles/torque_base.target.mk \
+	tools/v8_gypfiles/v8_base.host.mk tools/v8_gypfiles/v8_base_without_compiler.host.mk \
+	tools/v8_gypfiles/v8_compiler.host.mk tools/v8_gypfiles/v8_compiler_for_mksnapshot.host.mk \
+	tools/v8_gypfiles/v8_compiler_opt.host.mk tools/v8_gypfiles/v8_init.host.mk \
+	tools/v8_gypfiles/v8_initializers.host.mk tools/v8_gypfiles/v8_nosnapshot.host.mk
+else
+NODEJS_NO_LOAD:=cctest.target.mk embedtest.target.mk node_mksnapshot.target.mk overlapped-checker.target.mk \
+	mkcodecache.target.mk tools/v8_gypfiles/torque_base.target.mk tools/v8_gypfiles/v8_init.target.mk
 endif
 
 MAKE_VARS+= \
 	DESTCPU=$(NODEJS_CPU) \
-	NO_LOAD='cctest.target.mk embedtest.target.mk node_mksnapshot.target.mk overlapped-checker.target.mk \
-		mkcodecache.target.mk tools/v8_gypfiles/torque_base.target.mk tools/v8_gypfiles/v8_init.target.mk' \
-	LD_LIBRARY_PATH=$(STAGING_DIR_HOSTPKG)/share/icu/current/lib
+		NO_LOAD='$(NODEJS_NO_LOAD)' \
+		LD_LIBRARY_PATH=$(STAGING_DIR_HOSTPKG)/share/icu/current/lib
 
 HOST_MAKE_VARS+=NO_LOAD='cctest.target.mk embedtest.target.mk overlapped-checker.target.mk'
 
@@ -178,9 +197,10 @@ CONFIGURE_ARGS:= \
 	--dest-os=linux \
 	--cross-compiling \
 	--shared-zlib \
-	$(if $(CONFIG_NODEJS_18),--shared-openssl) \
+	--shared-openssl \
 	--shared-nghttp2 \
 	--shared-cares \
+	--without-snapshot \
 	--with-intl=$(if $(CONFIG_NODEJS_ICU_SMALL),small-icu,$(if $(CONFIG_NODEJS_ICU_SYSTEM),system-icu,none)) \
 	$(if $(findstring mips,$(NODEJS_CPU)), \
 		$(if $(CONFIG_SOFT_FLOAT),--with-mips-float-abi=soft)) \

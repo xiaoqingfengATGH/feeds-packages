@@ -1,26 +1,24 @@
+# Copyright (C) 2006-2026 OpenWrt.org
 #
-# Copyright (C) 2006-2014 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
+# SPDX-License-Identifier: GPL-2.0-only
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sqlite
-PKG_VERSION:=3400000
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=3.53.1
+PKG_SRC_VERSION:=3530100
+PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-autoconf-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://www.sqlite.org/2022/
-PKG_HASH:=0333552076d2700c75352256e91c78bf5cd62491589ba0c69aed0a81868980e7
+PKG_SOURCE:=$(PKG_NAME)-autoconf-$(PKG_SRC_VERSION).tar.gz
+PKG_SOURCE_URL:=https://www.sqlite.org/2026/
+PKG_HASH:=83e6b2020a034e9a7ad4a72feea59e1ad52f162e09cbd26735a3ffb98359fc4f
 
 PKG_CPE_ID:=cpe:/a:sqlite:sqlite
-PKG_LICENSE:=PUBLICDOMAIN
-PKG_LICENSE_FILES:=
-PKG_MAINTAINER:=
+PKG_LICENSE:=blessing
+PKG_LICENSE_FILES:=LICENSE.md
+PKG_MAINTAINER:=Alexandru Ardelean <ardeleanalex@gmail.com>
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-autoconf-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-autoconf-$(PKG_SRC_VERSION)
 PKG_BUILD_PARALLEL:=1
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
@@ -77,8 +75,8 @@ define Package/sqlite3-cli
   DEPENDS := \
 	  +libsqlite3 \
 	  +SQLITE3_LIBEDIT:libedit \
-	  +SQLITE3_READLINE:libreadline \
-	  +SQLITE3_READLINE:libncursesw
+	  +SQLITE3_READLINE:libreadline
+  EXTRA_DEPENDS:=libsqlite3 (=$(PKG_VERSION)-r$(PKG_RELEASE))
   TITLE+= (cli)
 endef
 
@@ -98,26 +96,29 @@ TARGET_CFLAGS += \
 	-DHAVE_MALLOC_USABLE_SIZE \
 	-DSQLITE_ENABLE_UNLOCK_NOTIFY \
 	$(if $(CONFIG_SQLITE3_BATCH_ATOMIC_WRITE),-DSQLITE_ENABLE_BATCH_ATOMIC_WRITE) \
-	$(if $(CONFIG_SQLITE3_COLUMN_METADATA),-DSQLITE_ENABLE_COLUMN_METADATA)
+	$(if $(CONFIG_SQLITE3_COLUMN_METADATA),-DSQLITE_ENABLE_COLUMN_METADATA) \
+	-DHAVE_EDITLINE=$(if $(CONFIG_SQLITE3_LIBEDIT),1,0) \
+	-DHAVE_READLINE=$(if $(CONFIG_SQLITE3_READLINE),1,0)
 
-CONFIGURE_ARGS += \
+CONFIGURE_ARGS := \
+	$(filter-out --target=% $(DISABLE_IPV6) $(DISABLE_NLS),$(CONFIGURE_ARGS)) \
 	--disable-debug \
 	--disable-static-shell \
 	--enable-shared \
 	--enable-static \
 	--enable-threadsafe \
-	$(if $(CONFIG_SQLITE3_DYNAMIC_EXTENSIONS),--enable-dynamic-extensions,--disable-dynamic-extensions) \
+	--soname=legacy \
+	$(if $(CONFIG_SQLITE3_DYNAMIC_EXTENSIONS),--enable-load-extension,--disable-load-extension) \
 	$(if $(CONFIG_SQLITE3_FTS3),--enable-fts3,--disable-fts3) \
 	$(if $(CONFIG_SQLITE3_FTS4),--enable-fts4,--disable-fts4) \
 	$(if $(CONFIG_SQLITE3_FTS5),--enable-fts5,--disable-fts5) \
-	$(if $(CONFIG_SQLITE3_JSON1),--enable-json1,--disable-json1) \
 	$(if $(CONFIG_SQLITE3_RTREE),--enable-rtree,--disable-rtree) \
 	$(if $(CONFIG_SQLITE3_SESSION),--enable-session,--disable-session)
 
 ifeq ($(CONFIG_SQLITE3_LIBEDIT),y)
-CONFIGURE_ARGS+=--disable-readline
+CONFIGURE_ARGS+=--editline --with-readline-header=$(STAGING_DIR)/usr/include/editline/readline.h
 else ifeq ($(CONFIG_SQLITE3_READLINE),y)
-CONFIGURE_ARGS+=--disable-editline
+CONFIGURE_ARGS+=--readline --with-readline-header=$(STAGING_DIR)/usr/include/readline/readline.h
 else
 CONFIGURE_ARGS+=--disable-editline --disable-readline
 endif
@@ -132,7 +133,7 @@ endef
 
 define Package/libsqlite3/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libsqlite3.so.$(ABI_VERSION)* $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libsqlite3.so.{$(PKG_VERSION),$(ABI_VERSION)} $(1)/usr/lib
 endef
 
 define Package/sqlite3-cli/install

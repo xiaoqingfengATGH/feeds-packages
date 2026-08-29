@@ -5,20 +5,20 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rust
-PKG_VERSION:=1.78.0
-PKG_RELEASE:=2
+PKG_VERSION:=1.98.0
+PKG_RELEASE:=1
 
 PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.xz
 PKG_SOURCE_URL:=https://static.rust-lang.org/dist/
-PKG_HASH:=8065824f0255faa3901db8206e6f9423f6f8c07cec28bc6f2797c6c948310ece
+PKG_HASH:=271fa73d8174f53d713c46a8310da7bf7cfdcfb8b7cfd1c2b74b84a83ae9fb1e
 HOST_BUILD_DIR:=$(BUILD_DIR)/host/rustc-$(PKG_VERSION)-src
 
 PKG_MAINTAINER:=Luca Barbato <lu_zero@luminem.org>
 PKG_LICENSE:=Apache-2.0 MIT
 PKG_LICENSE_FILES:=LICENSE-APACHE LICENSE-MIT
+PKG_CPE_ID:=cpe:/a:rust-lang:rust
 
 PKG_HOST_ONLY:=1
-PKG_BUILD_FLAGS:=no-mips16
 PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/host-build.mk
@@ -55,7 +55,7 @@ TARGET_CONFIGURE_ARGS = \
 	--set=target.$(RUSTC_TARGET_ARCH).linker=$(TARGET_CC_NOCACHE) \
 	--set=target.$(RUSTC_TARGET_ARCH).ranlib=$(TARGET_RANLIB) \
 	--set=target.$(RUSTC_TARGET_ARCH).crt-static=false \
-	$(if $(CONFIG_USE_MUSL),--set=target.$(RUSTC_TARGET_ARCH).musl-root=$(TOOLCHAIN_DIR))
+	$(if $(CONFIG_USE_MUSL),--set=target.$(RUSTC_TARGET_ARCH).musl-root=$(TOOLCHAIN_ROOT_DIR))
 
 # CARGO_HOME is an environmental
 HOST_CONFIGURE_VARS += CARGO_HOME="$(CARGO_HOME)"
@@ -85,14 +85,28 @@ define Host/Uninstall
 		$(BASH) $(RUST_UNINSTALL) || echo No Uninstall
 endef
 
+define Host/Patch
+	$(if $(HOST_QUILT),rm -rf $(HOST_BUILD_DIR)/patches; mkdir -p $(HOST_BUILD_DIR)/patches)
+	$(if $(HOST_QUILT),$(call PatchDir/Quilt,$(HOST_BUILD_DIR),$(HOST_PATCH_DIR),))
+	$(if $(HOST_QUILT),touch $(HOST_BUILD_DIR)/.quilt_used)
+	$(if $(HOST_QUILT),,$(if $(wildcard $(HOST_PATCH_DIR)/*.patch), \
+		$(foreach p,$(sort $(wildcard $(HOST_PATCH_DIR)/*.patch)), \
+			echo "Applying patch $(notdir $p)" ; \
+			$(PATCH) -f -p1 -d $(HOST_BUILD_DIR) < $p || \
+			{ echo "Patch failed! Please fix: $(notdir $p)!" ; exit 1 ; } ; \
+		) \
+	))
+endef
+
 define Host/Compile
 	$(RUST_SCCACHE_VARS) \
 	CARGO_HOME=$(CARGO_HOME) \
 	TARGET_CFLAGS="$(TARGET_CFLAGS)" \
+	$(if $(RUSTC_TARGET_RUSTFLAGS),$(RUSTC_TARGET_CARGO_RUSTFLAGS)="$(RUSTC_TARGET_RUSTFLAGS)") \
 	$(PYTHON) $(HOST_BUILD_DIR)/x.py \
 		--build-dir $(HOST_BUILD_DIR)/build \
-		--config $(HOST_BUILD_DIR)/config.toml \
-		dist build-manifest cargo llvm-tools rustc rust-std rust-src
+		--ci false \
+		dist build-manifest rustc rust-std cargo llvm-tools rust-src
 endef
 
 define Host/Install
