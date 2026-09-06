@@ -41,9 +41,9 @@ endef
 
 define Package/transmission-daemon
   $(call Package/transmission-daemon/Default)
-  TITLE+= (with OpenSSL)
-  DEPENDS+=+libopenssl
-  VARIANT:=openssl
+  TITLE+= (with mbed TLS)
+  DEPENDS+=+libmbedtls
+  VARIANT:=mbedtls
 endef
 
 define Package/transmission-daemon-mbedtls
@@ -55,9 +55,9 @@ endef
 
 define Package/transmission-cli
   $(call Package/transmission/template)
-  TITLE+= (with OpenSSL)
-  DEPENDS+=+libopenssl
-  VARIANT:=openssl
+  TITLE+= (with mbed TLS)
+  DEPENDS+=+libmbedtls
+  VARIANT:=mbedtls
 endef
 
 define Package/transmission-cli-mbedtls
@@ -69,9 +69,9 @@ endef
 
 define Package/transmission-remote
   $(call Package/transmission/template)
-  TITLE+= (with OpenSSL)
-  DEPENDS+=+libopenssl
-  VARIANT:=openssl
+  TITLE+= (with mbed TLS)
+  DEPENDS+=+libmbedtls
+  VARIANT:=mbedtls
 endef
 
 define Package/transmission-remote-mbedtls
@@ -138,7 +138,7 @@ ifeq ($(BUILD_VARIANT),mbedtls)
 	MBEDTLS_CFLAGS="-I$(STAGING_DIR)/usr/include/mbedtls" \
 	MBEDTLS_LIBS="-lmbedtls -lmbedcrypto"
 else
-  CONFIGURE_ARGS += --with-crypto=openssl
+  CONFIGURE_ARGS += --with-crypto=polarssl
 endif
 
 define Package/transmission-daemon/install

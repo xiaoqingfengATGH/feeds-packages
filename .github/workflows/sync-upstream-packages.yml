@@ -1,0 +1,87 @@
+name: Sync upstream packages
+
+on:
+  schedule:
+    - cron: '27 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-packages
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Sync package directories
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          work_dir="$(mktemp -d)"
+          trap 'rm -rf "$work_dir"' EXIT
+
+          sync_package() {
+            local repository="$1"
+            local branch="$2"
+            local source_path="$3"
+            local destination="$4"
+            local checkout_dir="$work_dir/$(basename "$destination")"
+
+            if ! git clone --depth 1 --single-branch --branch "$branch" \
+              "https://github.com/${repository}.git" "$checkout_dir"; then
+              echo "::warning::Skipping ${repository}@${branch}: upstream repository or branch is unavailable."
+              return 0
+            fi
+
+            if [[ ! -d "$checkout_dir/$source_path" ]]; then
+              echo "::warning::Skipping ${repository}@${branch}: path ${source_path} does not exist."
+              return 0
+            fi
+
+            mkdir -p "$destination"
+            rsync --archive --delete --exclude='.git/' \
+              "$checkout_dir/$source_path/" "$destination/"
+          }
+
+          sync_package "sbwml/luci-app-mosdns" "v5" \
+            "geo2txt" "net/geo2txt"
+          sync_package "sbwml/luci-app-mosdns" "v5" \
+            "mosdns" "net/mosdns"
+          sync_package "immortalwrt/packages" "master" \
+            "net/daed" "net/daed"
+          sync_package "QiuSimons/vmlinux-btf" "master" \
+            "." "kernel/vmlinux-btf"
+
+      - name: Commit and push changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          package_paths=(
+            net/geo2txt
+            net/mosdns
+            net/daed
+            kernel/vmlinux-btf
+          )
+
+          if git diff --quiet -- "${package_paths[@]}" && \
+              test -z "$(git status --porcelain --untracked-files=all -- "${package_paths[@]}")"; then
+            echo 'All upstream packages are already up to date.'
+            exit 0
+          fi
+
+          git add -- "${package_paths[@]}"
+          git commit -m 'ci: sync upstream packages'
+          git push

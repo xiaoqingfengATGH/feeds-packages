@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=qbittorrent
 PKG_VERSION:=4.4.5
-PKG_RELEASE=1
+PKG_RELEASE=2
 
 PKG_SOURCE:=qBittorrent-release-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/qbittorrent/qBittorrent/tar.gz/release-$(PKG_VERSION)?
@@ -88,8 +88,11 @@ define Package/qbittorrent/conffiles
 endef
 
 define Package/qbittorrent/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/config $(1)/etc/init.d $(1)/usr/bin $(1)/usr/share/qbittorrent
+	$(INSTALL_CONF) ./files/qbittorrent.config $(1)/etc/config/qbittorrent
+	$(INSTALL_BIN) ./files/qbittorrent.init $(1)/etc/init.d/qbittorrent
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/qbittorrent-nox $(1)/usr/bin
+	$(INSTALL_DATA) ./files/qBittorrent.conf.example $(1)/usr/share/qbittorrent/
 endef
 
 $(eval $(call BuildPackage,qbittorrent))

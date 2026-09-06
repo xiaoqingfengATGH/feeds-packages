@@ -48,7 +48,7 @@ define Package/bandwidthd-sqlite
 $(call Package/bandwidthd/Default)
   TITLE += (with sqlite enabled)
   VARIANT:=sqlite
-  DEPENDS:=+libgd +libpcap +libsqlite3 +php8 +php8-cgi +php8-mod-gd +php8-mod-pdo +php8-mod-pdo-sqlite
+  DEPENDS:=+libgd-full +libpcap +libsqlite3 +php8 +php8-cgi +php8-mod-gd +php8-mod-pdo +php8-mod-pdo-sqlite
 endef
 
 define Package/bandwidthd-php

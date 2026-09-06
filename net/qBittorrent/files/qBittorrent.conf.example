@@ -1,0 +1,24 @@
+[Application]
+FileLogger\Enabled=true
+FileLogger\Path=/var/log/qbittorrent
+
+[BitTorrent]
+Session\DefaultSavePath=/mnt/download
+Session\QueueingSystemEnabled=false
+
+[LegalNotice]
+Accepted=true
+
+[Preferences]
+General\Locale=zh_CN
+WebUI\Address=*
+WebUI\AuthSubnetWhitelist=10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+WebUI\AuthSubnetWhitelistEnabled=true
+WebUI\CSRFProtection=false
+WebUI\ClickjackingProtection=false
+WebUI\HostHeaderValidation=true
+WebUI\LocalHostAuth=true
+WebUI\Password_PBKDF2="@ByteArray(jitR5BGNNzYwj+fDyesHIg==:PzUTXosIj4MeWbd/42TEWE26dazmXMwZuTOIjcjD681eFq/PIdyu/6YAmoGl16ekasJDDAvnhgllDIXB+cfFHQ==)"
+WebUI\Port=8080
+WebUI\ServerDomains=*
+WebUI\Username=admin
