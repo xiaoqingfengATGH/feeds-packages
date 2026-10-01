@@ -61,6 +61,67 @@ jobs:
           sync_package "QiuSimons/vmlinux-btf" "master" \
             "." "kernel/vmlinux-btf"
 
+      - name: Sync sing-box stable release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          work_dir="$(mktemp -d)"
+          trap 'rm -rf "$work_dir"' EXIT
+
+          sync_sing_box() {
+            local makefile='net/sing-box/Makefile'
+            local tag version current_version hash
+            local api_headers=(-H 'Accept: application/vnd.github+json')
+            if [[ -n "${GH_TOKEN:-}" ]]; then
+              api_headers+=(-H "Authorization: Bearer ${GH_TOKEN}")
+            fi
+
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              --connect-timeout 20 --max-time 120 "${api_headers[@]}" \
+              'https://api.github.com/repos/SagerNet/sing-box/releases/latest' \
+              -o "$work_dir/release.json"; then
+              echo '::warning::Skipping sing-box: latest release is unavailable.'
+              return 0
+            fi
+            if ! tag="$(jq -er 'select(.draft == false and .prerelease == false) | .tag_name | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))' "$work_dir/release.json")"; then
+              echo '::warning::Skipping sing-box: invalid stable release metadata.'
+              return 0
+            fi
+
+            version="${tag#v}"
+            current_version="$(sed -n 's/^PKG_VERSION:=//p' "$makefile")"
+            if [[ ! "$current_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo '::warning::Skipping sing-box: unsupported current package version.'
+              return 0
+            fi
+            if [[ "$version" == "$current_version" ]] || \
+              [[ "$(printf '%s\n' "$version" "$current_version" | sort -V | tail -n 1)" != "$version" ]]; then
+              echo "sing-box ${current_version} is already up to date."
+              return 0
+            fi
+
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              --connect-timeout 20 --max-time 300 \
+              "https://codeload.github.com/SagerNet/sing-box/tar.gz/${tag}?" \
+              -o "$work_dir/source.tar.gz" || \
+              ! tar -tzf "$work_dir/source.tar.gz" > /dev/null; then
+              echo '::warning::Skipping sing-box: source archive is unavailable or invalid.'
+              return 0
+            fi
+            hash="$(sha256sum "$work_dir/source.tar.gz" | cut -d ' ' -f 1)"
+            sed -i \
+              -e "s/^PKG_VERSION:=.*/PKG_VERSION:=${version}/" \
+              -e 's/^PKG_RELEASE:=.*/PKG_RELEASE:=1/' \
+              -e "s/^PKG_HASH:=.*/PKG_HASH:=${hash}/" \
+              "$makefile"
+            echo "Updated sing-box ${current_version} -> ${version} (${hash})."
+          }
+
+          sync_sing_box
+
       - name: Commit and push changes
         shell: bash
         run: |
@@ -74,6 +135,7 @@ jobs:
             net/mosdns
             net/daed
             kernel/vmlinux-btf
+            net/sing-box/Makefile
           )
 
           if git diff --quiet -- "${package_paths[@]}" && \

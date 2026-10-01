@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libwebsockets
 PKG_VERSION:=4.5.8
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -32,7 +32,7 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
 CMAKE_OPTIONS += -DLWS_IPV6=$(if $(CONFIG_IPV6),ON,OFF)
-CMAKE_OPTIONS += -DISABLE_WERROR=ON
+CMAKE_OPTIONS += -DDISABLE_WERROR=ON
 CMAKE_OPTIONS += -DCMAKE_BUILD_TYPE=Release
 CMAKE_OPTIONS += -DLWS_WITH_EXTERNAL_POLL=ON
 CMAKE_OPTIONS += -DLWS_WITH_ULOOP=ON
@@ -91,6 +91,7 @@ ifeq ($(BUILD_VARIANT),full)
     CMAKE_OPTIONS += -DLWS_OPENSSL_CLIENT_CERTS=/etc/ssl/certs
     CMAKE_OPTIONS += -DLWS_WITH_SSL=ON
     CMAKE_OPTIONS += -DLWS_WITH_LIBUV=ON
+    CMAKE_OPTIONS += -DLWS_WITH_EVLIB_PLUGINS=OFF
     CMAKE_OPTIONS += -DLWS_WITH_PLUGINS=ON
     CMAKE_OPTIONS += -DLWS_WITH_SERVER_STATUS=ON
     CMAKE_OPTIONS += -DLWS_WITH_ACCESS_LOG=ON
@@ -108,7 +109,6 @@ Package/libwebsockets-openssl/install = $(Package/libwebsockets/install)
 
 define Package/libwebsockets-full/install
 	$(call Package/libwebsockets/install,$(1))
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libwebsockets-evlib_uv.so* $(1)/usr/lib
 endef
 
 $(eval $(call BuildPackage,libwebsockets-openssl))

@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=ovpn-backports
 PKG_VERSION:=7.0.0.2026032400
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL= \
@@ -49,7 +49,8 @@ NOSTDINC_FLAGS += \
 	$(KERNEL_NOSTDINC_FLAGS) \
 	-I$(PKG_BUILD_DIR)/include \
 	-I$(PKG_BUILD_DIR)/compat-include \
-	-include $(PKG_BUILD_DIR)/linux-compat.h
+	-include $(PKG_BUILD_DIR)/linux-compat.h \
+	-DOVPN_MODULE_VERSION=\\\"$(PKG_VERSION)-openwrt-$(PKG_RELEASE)\\\"
 
 EXTRA_KCONFIG:= \
 	CONFIG_OVPN=m

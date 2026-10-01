@@ -5,11 +5,54 @@ START=99
 BIN=/usr/sbin/owntone
 PID=/var/run/owntone.pid
 SSD=start-stop-daemon
+UCI_CONFIG=/etc/config/owntone
+GENERATED_CONFIG=/var/etc/owntone.conf
+
+uci_get() {
+	local value
+	value="$(uci -q get "owntone.@owntone[0].$1")"
+	echo "${value:-$2}"
+}
+
+gen_config_file() {
+	mkdir -p "${GENERATED_CONFIG%/*}"
+	cat <<-EOF >"$GENERATED_CONFIG"
+general {
+	uid = "root"
+	db_path = "$(uci_get db_path /opt/owntone-songs3.db)"
+	logfile = "/var/log/owntone.log"
+	loglevel = log
+	ipv6 = no
+	cache_path = "/var/owntone-cache.db"
+}
+
+library {
+	name = "My Music on OpenWrt"
+	port = $(uci_get port 3689)
+	directories = { "$(uci_get directories /opt/music)" }
+	podcasts = { "/Podcasts" }
+	audiobooks = { "/Audiobooks" }
+	compilations = { "/Compilations" }
+	compilation_artist = "Various Artists"
+}
+
+audio {
+	nickname = "Local Audio Output"
+	type = "alsa"
+}
+EOF
+}
 
 start() {
-        $SSD -p $PID -S -x $BIN -- -P $PID
+	if [ -s "$UCI_CONFIG" ]; then
+		[ "$(uci_get enabled 0)" = "1" ] || return 1
+		gen_config_file
+		$SSD -p $PID -S -b -x $BIN -- -P $PID -c "$GENERATED_CONFIG"
+	else
+		$SSD -p $PID -S -x $BIN -- -P $PID
+	fi
 }
-	
+
 stop() {
-        $SSD -p $PID -K -s SIGINT
+	$SSD -p $PID -K -s SIGINT
 }
