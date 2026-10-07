@@ -1,12 +1,29 @@
 #!/bin/sh /etc/rc.common
 
+# HOMELEDE-CUSTOM: mount the unified cgroup v2 hierarchy at boot.
+#
+# This kernel (6.1x+) has the cgroup v1 controller interfaces compiled
+# out (CONFIG_MEMCG_V1 / CONFIG_CPUSETS_V1 unset), so a v1 hierarchy
+# carries no memory/cpuset controllers and dockerd landing on it loses
+# every container resource limit.  Mount cgroup2 at the canonical path
+# dockerd probes and arm the controllers docker uses at the root; the
+# root cgroup is exempt from the no-internal-process rule, so arming
+# works at S01 with every boot process still living in the root.
+
 START=01
 
 boot() {
-	# Procd mounts non-hierarchical cgroupfs so unmount first before cgroupfs-mount
-	if mountpoint -q /sys/fs/cgroup; then
-		umount /sys/fs/cgroup/
+	if grep -qs ' /sys/fs/cgroup cgroup2 ' /proc/mounts; then
+		: # already up -- nothing to do
+	else
+		# procd stacks a plain tmpfs over /sys/fs/cgroup; mounting
+		# cgroup2 on top of it is fine and is what dockerd probes.
+		if ! mount -t cgroup2 none /sys/fs/cgroup; then
+			echo "cgroupfs-mount: failed to mount cgroup2 on /sys/fs/cgroup" >&2
+			return 1
+		fi
 	fi
 
-	cgroupfs-mount
+	echo '+cpuset +cpu +io +memory +pids' > /sys/fs/cgroup/cgroup.subtree_control 2>/dev/null || \
+		echo "cgroupfs-mount: warning: could not arm cgroup controllers" >&2
 }
