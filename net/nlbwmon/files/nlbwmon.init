@@ -64,8 +64,8 @@ parse_config() {
 	mkdir -p "$dir"
 	procd_append_param command -o "$dir"
 
-	add_option "$cfg" -b netlink_buffer_size 524288
-	add_option "$cfg" -i commit_interval 24h
+	add_option "$cfg" -b netlink_buffer_size 4194304
+	add_option "$cfg" -i commit_interval 4h
 	add_option "$cfg" -r refresh_interval 30s
 	add_option "$cfg" -p protocol_database /usr/share/nlbwmon/protocols
 	add_option "$cfg" -G database_generations 10
